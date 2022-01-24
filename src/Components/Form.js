@@ -1,28 +1,50 @@
 import React,{useState} from 'react';
 
-export default function Form({addTask}) {
+export default function Form({addTask,server}) {
 
-    const [text,setText]=useState()
-    const [day,setDay]=useState()
-    const [remainder,setRemainder]=useState(false)
+    const [text,setText]=useState('')
+    const [day,setDay]=useState('')
+    const [reminder,setReminder]=useState(false)
     const [flagText,setFlagText]=useState(false)
     const [flagDay,setFlagDay]=useState(false)
 
-    const onSubmit =(e)=>{
+  
+
+    const onSubmit =async(e)=>{
         e.preventDefault()
 
-        if(!text )
+        if(!(text.length>1))
         {
             alert('fill up the form')
             setFlagDay(true)
             setFlagText(true)
             return
         }
-        addTask({text,day,remainder})
 
-        setText('')
-        setDay('')
-        setRemainder(false)
+        const params = new URLSearchParams();
+        params.append('text',text)
+        params.append('day',day)
+        params.append('reminder',reminder)
+
+
+
+        const res = await fetch(`${server}/task/add`,{
+          method:'POST',
+          headers: {
+            'Content-Type':'application/x-www-form-urlencoded'
+          },
+          body: params
+      });
+
+      const data = await res.json()
+
+      
+
+      addTask(data)
+
+      setText('')
+      setDay('')
+      setReminder(false)
     }
 
   return <form className='add-form' onSubmit={onSubmit}>
@@ -46,14 +68,20 @@ export default function Form({addTask}) {
         />
       </div>
       <div className='form-control form-control-check'>
-        <label>Set Remainder</label>
+        <label>Set Reminder</label>
         <input 
             type='checkbox'
-            value={remainder}
-            onChange={(e)=>setRemainder(e.currentTarget.checked)}
+            value={reminder}
+            onChange={(e)=>setReminder(e.currentTarget.checked)}
         />
       </div>
 
-      <input type='submit' value='Save Task' className='btn btn-block' />
+      <input 
+        type='submit' 
+        style={{backgroundColor:'green'}}  
+        value='Save Task' 
+        className='btn btn-block'
+        disabled={text.length === 0 && day.length === 0} 
+        />
   </form>;
 }
